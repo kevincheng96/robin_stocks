@@ -5,9 +5,10 @@ sys.path.insert(2,'/Users/Kevincheng96/Documents/Coding Projects/Python projects
 from flask import Flask
 
 from actions import generate_portfolio_summary
+from actions import generate_top_news
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-	return generate_portfolio_summary()
+	return generate_top_news()
