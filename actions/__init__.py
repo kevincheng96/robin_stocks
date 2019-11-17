@@ -1,1 +1,2 @@
 from .generate_portfolio_summary import generate_portfolio_summary
+from .generate_top_news import generate_top_news

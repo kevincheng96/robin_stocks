@@ -9,6 +9,7 @@ verify_ssl = true
 requests = {extras = ["security"],version = "*"}
 pyttsx3 = "*"
 flask = "*"
+flask-assistant = "*"
 
 [requires]
 python_version = "3.7"
