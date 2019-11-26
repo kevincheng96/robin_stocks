@@ -1,5 +1,6 @@
 # general things to ignore
 data.pickle
+auth_token.db
 .vscode/
 build/
 dist/

@@ -2,8 +2,9 @@
 import robin_stocks.urls as urls
 import robin_stocks.helper as helper
 import random
-import pickle
 import os
+
+from models import AuthToken, store_auth_token
 
 def generate_device_token():
     """This function will generate a token used when loggin on.
@@ -49,7 +50,7 @@ def respond_to_challenge(challenge_id, sms_code):
 def login(username,password,expiresIn=86400,scope='internal',by_sms=True,store_session=True):
     """This function will effectivly log the user into robinhood by getting an
     authentication token and saving it to the session header. By default, it will store the authentication
-    token in a pickle file and load that value on subsequent logins.
+    token in SQLite and load that value on subsequent logins.
 
     :param username: The username for your robinhood account. Usually your email.
     :type username: str
@@ -64,12 +65,11 @@ def login(username,password,expiresIn=86400,scope='internal',by_sms=True,store_s
     :param store_session: Specifies whether to save the log in authorization for future log ins.
     :type store_session: Optional[boolean]
     :returns:  A dictionary with log in information. The 'access_token' keyword contains the access token, and the 'detail' keyword \
-    contains information on whether the access token was generated or loaded from pickle file.
+    contains information on whether the access token was generated or loaded from SQLite.
 
     """
+    username = username.lower()
     device_token = generate_device_token()
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    pickle_path = os.path.join(dir_path,"data.pickle")
     # Challenge type is used if not logging in with two-factor authentication.
     if by_sms:
         challenge_type = "sms"
@@ -87,36 +87,36 @@ def login(username,password,expiresIn=86400,scope='internal',by_sms=True,store_s
     'challenge_type': challenge_type,
     'device_token': device_token
     }
-    # If authentication has been stored in pickle file then load it. Stops login server from being pinged so much.
-    if os.path.isfile(pickle_path):
-        # If store_session has been set to false then delete the pickle file, otherwise try to load it.
-        # Loading pickle file will fail if the acess_token has expired.
+    auth_token = AuthToken.query.filter_by(username=username).first()
+    if auth_token:
+        # If store_session has been set to false then delete the SQLite entry, otherwise try to load it.
+        # Loading from SQLite will fail if the access_token has expired.
         if store_session:
             try:
-                with open(pickle_path, 'rb') as f:
-                    pickle_data = pickle.load(f)
-                    access_token = pickle_data['access_token']
-                    token_type = pickle_data['token_type']
-                    refresh_token = pickle_data['refresh_token']
-                    # Set device_token to be the original device token when first logged in.
-                    pickle_device_token = pickle_data['device_token']
-                    payload['device_token'] = pickle_device_token
-                    # Set login status to True in order to try and get account info.
-                    helper.set_login_state(True)
-                    helper.update_session('Authorization','{0} {1}'.format(token_type, access_token))
-                    # Try to load account profile to check that authorization token is still valid.
-                    res = helper.request_get(urls.portfolio_profile(),'regular',payload,jsonify_data=False)
-                    # Raises exception is response code is not 200.
-                    res.raise_for_status()
-                    return({'access_token': access_token,'token_type': token_type,
-                    'expires_in': expiresIn, 'scope': scope, 'detail': 'logged in using authentication in data.pickle',
-                    'backup_code': None, 'refresh_token': refresh_token})
+                access_token = auth_token.access_token
+                token_type = auth_token.token_type
+                refresh_token = auth_token.refresh_token
+                # Set device_token auth_token be the original device token when first logged in.
+                device_token = auth_token.device_token
+                payload['device_token'] = device_token
+                # Set login status to True in order to try and get account info.
+                helper.set_login_state(True)
+                helper.update_session('Authorization','{0} {1}'.format(token_type, access_token))
+                # Try to load account profile to check that authorization token is still valid.
+                res = helper.request_get(urls.portfolio_profile(),'regular',payload,jsonify_data=False)
+                # Raises exception if response code is not 200.
+                res.raise_for_status()
+                return({'access_token': access_token,'token_type': token_type,
+                'expires_in': expiresIn, 'scope': scope, 'detail': 'logged in using authentication in SQLite',
+                'backup_code': None, 'refresh_token': refresh_token})
             except:
-                print("ERROR: There was an issue loading pickle file. Authentication may be expired - logging in normally.")
+                print("ERROR: There was an issue loading data from SQLite. Authentication may be expired - logging in normally.")
                 helper.set_login_state(False)
                 helper.update_session('Authorization',None)
         else:
-            os.remove(pickle_path)
+            # Delete auth token entry from SQLite.
+            auth_token.delete()
+            pass
     # Try to log in normally.
     data = helper.request_post(url,payload)
     # Handle case where mfa or challenge is required.
@@ -144,12 +144,8 @@ def login(username,password,expiresIn=86400,scope='internal',by_sms=True,store_s
         helper.update_session('Authorization',token)
         helper.set_login_state(True)
         data['detail'] = "logged in with brand new authentication code."
-        if store_session:
-            with open(pickle_path, 'wb') as f:
-                pickle.dump({'token_type' : data['token_type'],
-                            'access_token' : data['access_token'],
-                            'refresh_token' : data['refresh_token'],
-                            'device_token' : device_token},f)
+        # Store the new auth token in DB.
+        store_auth_token(username, data)
     else:
         raise Exception(data['detail'])
     return(data)

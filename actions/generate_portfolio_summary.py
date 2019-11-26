@@ -1,9 +1,6 @@
-import sys
-sys.path.insert(1,'/Users/Kevincheng96/Documents/Coding Projects/Python projects/robin_stocks')
-
 import robin_stocks as r
-import pyttsx3
-import heapq
+
+from models import store_auth_token
 
 '''
 Robinhood includes dividends as part of your net gain. This script removes
@@ -31,12 +28,9 @@ class Stock:
 	def __str__(self):
 		return self.name + " - " + self.ticker
 
-# TTS engine
-engine = pyttsx3.init()
-
 def generate_portfolio_summary():
-	login = r.login(username,password)
-	
+	r.login(username,password)
+
 	d = r.build_holdings()
 	d.update(r.build_user_profile())
 	return d

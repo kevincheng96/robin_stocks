@@ -1,19 +1,28 @@
+import os
 import sys
-sys.path.insert(1,'/Users/Kevincheng96/Documents/Coding Projects/Python projects/examples')
-sys.path.insert(2,'/Users/Kevincheng96/Documents/Coding Projects/Python projects/robin_stocks')
+sys.path.insert(1,'/Users/Kevincheng96/Documents/Coding Projects/Python projects/robin_stocks')
 
 from flask import Flask
 from flask_assistant import Assistant, ask, tell
-
-from actions import generate_portfolio_summary
-from actions import generate_top_news
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 assist = Assistant(app, route='/')
 
+# Set up SQLite DB.
+project_dir = os.path.dirname(os.path.abspath(__file__))
+database_file = "sqlite:///{}".format(os.path.join(project_dir, "auth_token.db"))
+app.config['SQLALCHEMY_DATABASE_URI'] = database_file
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Import these only after db is instantiated.
+from actions import generate_portfolio_summary
+from actions import generate_top_news
+
 @app.route('/')
 def index():
-	return generate_top_news()
+	return generate_portfolio_summary()
 
 @assist.action('get-market-news')
 def get_top_news():

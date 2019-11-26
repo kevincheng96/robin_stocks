@@ -10,6 +10,8 @@ requests = {extras = ["security"],version = "*"}
 pyttsx3 = "*"
 flask = "*"
 flask-assistant = "*"
+sqlalchemy = "*"
+flask-sqlalchemy = "*"
 
 [requires]
 python_version = "3.7"

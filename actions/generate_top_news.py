@@ -33,7 +33,7 @@ def generate_top_news():
 	# TTS engine
 	engine = pyttsx3.init()
 
-	login = r.login(username,password)
+	r.login(username,password)
 
 	# Get list of stocks in watchlist and positions.
 	stocks_dict = {}
