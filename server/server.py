@@ -1,6 +1,7 @@
 import os
 import sys
-sys.path.insert(1,'/Users/Kevincheng96/Documents/Coding Projects/Python projects/robin_stocks')
+project_dir = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(1, project_dir)
 
 from flask import Flask
 from flask_assistant import Assistant, ask, tell
@@ -10,8 +11,8 @@ app = Flask(__name__)
 assist = Assistant(app, route='/')
 
 # Set up SQLite DB.
-project_dir = os.path.dirname(os.path.abspath(__file__))
-database_file = "sqlite:///{}".format(os.path.join(project_dir, "auth_token.db"))
+db_dir = os.path.dirname(os.path.abspath(__file__))
+database_file = "sqlite:///{}".format(os.path.join(db_dir, "auth_token.db"))
 app.config['SQLALCHEMY_DATABASE_URI'] = database_file
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
