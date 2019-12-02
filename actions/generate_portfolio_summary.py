@@ -1,7 +1,5 @@
 import robin_stocks as r
 
-from models import store_auth_token
-
 '''
 Robinhood includes dividends as part of your net gain. This script removes
 dividends from net gain to figure out how much your stocks/options have paid
@@ -18,15 +16,6 @@ password = ''
 #!!!
 
 # TODO: Calculate total portfolio change. Then largest gainers and losers.
-
-class Stock:
-	def __init__(self, name, ticker, news = []):
-		self.name = name
-		self.ticker = ticker
-		self.news = news
-
-	def __str__(self):
-		return self.name + " - " + self.ticker
 
 def generate_portfolio_summary():
 	r.login(username,password)

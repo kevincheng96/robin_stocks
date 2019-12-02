@@ -3,8 +3,10 @@ import robin_stocks.urls as urls
 import robin_stocks.helper as helper
 import random
 import os
+from getpass import getpass
 
 from models import AuthToken, store_auth_token
+from server import db
 
 def generate_device_token():
     """This function will generate a token used when loggin on.
@@ -97,8 +99,8 @@ def login(username,password,expiresIn=86400,scope='internal',by_sms=True,store_s
                 token_type = auth_token.token_type
                 refresh_token = auth_token.refresh_token
                 # Set device_token auth_token be the original device token when first logged in.
-                device_token = auth_token.device_token
-                payload['device_token'] = device_token
+                stored_device_token = auth_token.device_token
+                payload['device_token'] = stored_device_token
                 # Set login status to True in order to try and get account info.
                 helper.set_login_state(True)
                 helper.update_session('Authorization','{0} {1}'.format(token_type, access_token))
@@ -116,8 +118,13 @@ def login(username,password,expiresIn=86400,scope='internal',by_sms=True,store_s
         else:
             # Delete auth token entry from SQLite.
             auth_token.delete()
+            db.session.commit()
             pass
     # Try to log in normally.
+    if not password:
+        password = getpass(prompt="Please enter your password: ")
+        payload['password'] = password
+        payload['device_token'] = device_token
     data = helper.request_post(url,payload)
     # Handle case where mfa or challenge is required.
     if 'mfa_required' in data:

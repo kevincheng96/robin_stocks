@@ -12,6 +12,7 @@ flask = "*"
 flask-assistant = "*"
 sqlalchemy = "*"
 flask-sqlalchemy = "*"
+getpass = "*"
 
 [requires]
 python_version = "3.7"

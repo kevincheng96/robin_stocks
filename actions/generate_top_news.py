@@ -1,8 +1,8 @@
 import sys
 sys.path.insert(1,'/Users/Kevincheng96/Documents/Coding Projects/Python projects/robin_stocks')
 
+from actions.objects import Stock
 import robin_stocks as r
-import pyttsx3
 import heapq
 
 '''
@@ -20,19 +20,7 @@ username = ''
 password = ''
 #!!!
 
-class Stock:
-	def __init__(self, name, ticker, news = []):
-		self.name = name
-		self.ticker = ticker
-		self.news = news
-
-	def __str__(self):
-		return self.name + " - " + self.ticker
-
 def generate_top_news():
-	# TTS engine
-	engine = pyttsx3.init()
-
 	r.login(username,password)
 
 	# Get list of stocks in watchlist and positions.
@@ -74,9 +62,5 @@ def generate_top_news():
 		ticker, source, title = news[1], news[2], news[3]
 		stock_news_string = "Top news for stock " + stocks_dict[ticker].name
 		news_source_string = "From source, " + source
-		# engine.say(stock_news_string)
-		# engine.say(news_source_string)
-		# engine.say(title)
 		news_aggregate.append(stock_news_string + "\n" + news_source_string + "\n" + title)
-	# engine.runAndWait()
 	return ''.join(news_aggregate)

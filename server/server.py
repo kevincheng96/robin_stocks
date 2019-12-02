@@ -23,11 +23,13 @@ from actions import generate_top_news
 
 @app.route('/')
 def index():
-	return generate_portfolio_summary()
+	# return generate_portfolio_summary()
+	return generate_top_news()
 
 @assist.action('get-market-news')
 def get_top_news():
 	# TODO: Optimize this call since it breaches the 5 second timeout for AoG.
+	# TODO: Run Cron job to cache DB with top news for each stock to reduce latency.
     return tell(generate_top_news())
 
 @assist.action('generate-portfolio-summary')
