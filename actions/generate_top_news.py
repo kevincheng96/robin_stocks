@@ -22,7 +22,6 @@ username = ''
 password = ''
 #!!!
 
-# TODO: Add async calls!!!
 def generate_top_news():
 	start_time = time.time()
 	r.login(username,password)
@@ -48,8 +47,9 @@ def generate_top_news():
 	news_heap = []
 	news_dict = {}
 	with ThreadPoolExecutor(max_workers=20) as executor:
-		news_futures = [executor.submit(r.get_news, stock.ticker) for stock in stocks_dict.values()]
-	for news_future in as_completed(news_futures):
+		news_futures_to_ticker = {executor.submit(r.get_news, stock.ticker): stock.ticker for stock in stocks_dict.values()}
+	for news_future in as_completed(news_futures_to_ticker):
+		ticker = news_futures_to_ticker[news_future]
 		news = news_future.result()
 		if not news:
 			continue
@@ -59,15 +59,15 @@ def generate_top_news():
 		source = recent_news['api_source']
 		title = recent_news['title']
 		# (-views, ticker, source, title)
-		heapq.heappush(news_heap, (-num_clicks, stock.ticker, source, title))
+		heapq.heappush(news_heap, (-num_clicks, ticker, source, title))
 	print("--- %s seconds --- (Got all news)" % (time.time() - start_time))
 
 	# TTS for top news.
 	news_aggregate = []
 	for news in news_heap[:5]:
 		ticker, source, title = news[1], news[2], news[3]
-		stock_news_string = "Top news for stock " + stocks_dict[ticker].name
-		news_source_string = "From source, " + source
-		news_aggregate.append(stock_news_string + "\n" + news_source_string + "\n" + title)
+		stock_news_string = "Top news for stock " + stocks_dict[ticker].name + ", "
+		news_source_string = "from " + source + ": "
+		news_aggregate.append(stock_news_string + news_source_string + title + "\n")
 	print("--- %s seconds --- (End)" % (time.time() - start_time))
 	return ''.join(news_aggregate)
