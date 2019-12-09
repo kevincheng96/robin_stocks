@@ -13,6 +13,7 @@ flask-assistant = "*"
 sqlalchemy = "*"
 flask-sqlalchemy = "*"
 getpass = "*"
+concurrent-futures = "*"
 
 [requires]
 python_version = "3.7"
