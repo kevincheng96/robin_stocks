@@ -121,6 +121,9 @@ def login(username,password,expiresIn=86400,scope='internal',by_sms=True,store_s
             db.session.commit()
             pass
     # Try to log in normally.
+    if not username:
+        username = input("Please enter your username: ")
+        payload['username'] = username
     if not password:
         password = getpass(prompt="Please enter your password: ")
         payload['password'] = password
